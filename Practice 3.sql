@@ -56,4 +56,5 @@ select position('a' in first_name)
 from worker
 where first_name='Amitah'
 --ex10: Find the vintage years of all wines from the country of Macedonia. The year can be found in the 'title' column. Output the wine (i.e., the 'title') along with the year. The year should be a numeric or int data type.
-
+select substring(title, length(winery)+2,4)
+from winemag_p2
