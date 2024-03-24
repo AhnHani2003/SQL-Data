@@ -62,10 +62,75 @@ ON a.page_id = b.page_id
 WHERE b.liked_date IS NULL
 ORDER BY a.page_id
 --Question 1
-select 
-distinct min(replacement_cost)
+select distinct replacement_cost
 from film
+order by replacement_cost
 --Question 2
-
-
-
+SELECT 
+    CASE 
+        WHEN replacement_cost BETWEEN 9.99 AND 19.99 THEN 'low'
+        WHEN replacement_cost BETWEEN 20.00 AND 24.99 THEN 'medium'
+        ELSE 'high'      
+    END cost_range,
+    COUNT(*) AS number_of_films
+FROM film
+GROUP BY cost_range;
+--Question 3
+select c.title, c.length, a.name
+from public.category a
+join public.film_category b 
+on a.category_id = b.category_id
+join public.film c
+on b.film_id = c.film_id
+where a.name = 'Drama' or a.name = 'Sports'
+order by c.length desc;
+--Question 4
+select a.name,
+count(c.title) as so_luong
+from public.category a
+join public.film_category b 
+on a.category_id = b.category_id
+join public.film c
+on b.film_id = c.film_id
+group by a.name
+order by so_luong desc
+--Question 5
+select a.first_name, a.last_name,
+count(c.title) as so_luong
+from public.actor a
+join public.film_actor b 
+on a.actor_id = b.actor_id
+join public.film c
+on b.film_id = c.film_id
+group by a.first_name, a.last_name
+order by so_luong desc
+--Question 6
+select a.address,
+from public.address a
+left join public.customer b
+on a.address_id = b.address_id
+where b.customer_id is NULL
+--Question 7
+select a.city, sum(d.amount)
+from public.city a
+join public.address b 
+on a.city_id = b.city_id
+join public.customer c
+on b.address_id = c.address_id
+join public.payment d
+on d.customer_id = d.customer_id
+group by a.city
+order by sum(d.amount) desc
+--Question 8
+select a.city || ',' || e.country as city, sum(d.amount)
+from public.city a
+join public.country e
+on a.country_id = e.country_id
+join public.address b 
+on a.city_id = b.city_id
+join public.customer c
+on b.address_id = c.address_id
+join public.payment d
+on d.customer_id = d.customer_id
+group by a.city || ',' || e.country
+order by sum(d.amount) desc
