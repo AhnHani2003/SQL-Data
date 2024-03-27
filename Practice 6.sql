@@ -135,7 +135,7 @@ FROM user
 UNION ALL
 SELECT title AS Result 
 FROM movie
-/*Write a solution to find the people who have the most friends and the most friends number.
+/*ex12: Write a solution to find the people who have the most friends and the most friends number.
 The test cases are generated so that only one person has the most friends.*/
 WITH unionall AS(SELECT requester_id id 
 FROM RequestAccepted
