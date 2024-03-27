@@ -94,3 +94,55 @@ HAVING COUNT(DISTINCT product_key) = (SELECT
 COUNT(*) FROM Product)
 /*ex9: Find the IDs of the employees whose salary is strictly less than $30000 and whose manager left the company. When a manager leaves the company, their information is deleted from the Employees table, but the reports still have their manager_id set to the manager that left.
 Return the result table ordered by employee_id.*/
+SELECT employee_id 
+FROM Employees
+WHERE salary < 30000 AND manager_id NOT IN (SELECT employee_id 
+FROM Employees)
+ORDER BY employee_id 
+/*ex10: Assume you're given a table containing job postings from various companies on the LinkedIn platform. Write a query to retrieve the count of companies that have posted duplicate job listings.
+Definition:
+Duplicate job listings are defined as two job listings within the same company that share identical titles and descriptions*/
+SELECT COUNT(DISTINCT company_id) AS duplicate_companies
+FROM job_listings
+WHERE (title, description, company_id) IN (
+    SELECT title, description, company_id
+    FROM job_listings
+    GROUP BY title, description, company_id
+    HAVING COUNT(*) > 1
+);
+/*ex11: Find the name of the user who has rated the greatest number of movies. In case of a tie, return the lexicographically smaller user name.
+Find the movie name with the highest average rating in February 2020. In case of a tie, return the lexicographically smaller movie name.*/
+WITH user AS(SELECT name
+FROM Users a
+JOIN MovieRating b ON a.user_id = b.user_id
+GROUP BY b.user_id
+HAVING COUNT(b.rating) = (SELECT MAX(COUNT(rating))
+FROM MovieRating
+GROUP BY user_id)
+ORDER BY COUNT(b.rating),name
+LIMIT 1),
+movie AS(SELECT a.title       
+FROM Movies a
+JOIN MovieRating b ON a.movie_id = b.movie_id  
+WHERE EXTRACT(MONTH FROM created_at) = 2
+GROUP BY movie_id    
+HAVING AVG(b.rating) > (SELECT AVG(rating)
+FROM MovieRating)
+ORDER BY AVG(b.rating),title
+LIMIT 1)
+SELECT name AS Result 
+FROM user
+UNION ALL
+SELECT title AS Result 
+FROM movie
+/*Write a solution to find the people who have the most friends and the most friends number.
+The test cases are generated so that only one person has the most friends.*/
+WITH unionall AS(SELECT requester_id id 
+FROM RequestAccepted
+UNION ALL
+SELECT accepter_id id 
+FROM RequestAccepted)
+
+SELECT id, count(*) num  FROM unionall 
+GROUP BY id ORDER BY count(*) DESC
+LIMIT 1
