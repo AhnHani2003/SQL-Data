@@ -63,3 +63,30 @@ FROM transactions)
 SELECT COUNT(merchant_id) as payment_count
 FROM cte
 WHERE diff_min < 10
+/*ex7: Assume you're given a table containing data on Amazon customers and their spending on products in different category, write a query to identify the top two highest-grossing products within each category in the year 2022. The output should include the category, product, and total spend.*/
+WITH RankedProducts AS (
+SELECT category,product,
+SUM(spend) AS total_spend,
+ROW_NUMBER() OVER (PARTITION BY category ORDER BY SUM(spend) DESC) AS rank
+FROM product_spend
+WHERE EXTRACT(YEAR FROM transaction_date) = 2022
+GROUP BY category, product
+)
+SELECT category, product, total_spend
+FROM RankedProducts
+WHERE rank <= 2;
+/*ex 8 : Write a query to find the top 5 artists whose songs appear most frequently in the Top 10 of the global_song_rank table. Display the top 5 artist names in ascending order, along with their song appearance ranking.
+If two or more artists have the same number of song appearances, they should be assigned the same ranking, and the rank numbers should be continuous (i.e. 1, 2, 2, 3, 4, 5). If you've never seen a rank order like this before, do the rank window function tutorial.*/
+WITH top10 AS (
+SELECT a.artist_name,
+DENSE_RANK() OVER (ORDER BY COUNT(b.song_id) DESC) AS artist_rank
+FROM artists a
+JOIN songs b ON a.artist_id = b.artist_id
+JOIN global_song_rank c ON b.song_id = c.song_id
+WHERE c.rank <= 10
+GROUP BY a.artist_name
+)
+
+SELECT artist_name, artist_rank
+FROM top10
+WHERE artist_rank <= 5;
