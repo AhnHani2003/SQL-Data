@@ -33,3 +33,33 @@ FROM cte
 WHERE rank = 1 
 GROUP BY transaction_date, user_id
 ORDER BY transaction_date;
+/*ex5: Given a table of tweet data over a specified time period, calculate the 3-day rolling average of tweets for each user. Output the user ID, tweet date, and rolling averages rounded to 2 decimal places.
+Notes:
+A rolling average, also known as a moving average or running mean is a time-series technique that examines trends in data over a specified period of time.
+In this case, we want to determine how the tweet count for each user changes over a 3-day period.*/
+WITH cte as(
+SELECT user_id, tweet_date, tweet_count,
+LAG(tweet_count) OVER(PARTITION BY user_id ORDER BY tweet_date) as rl1,
+LAG(tweet_count,2) OVER(PARTITION BY user_id ORDER BY tweet_date) as rl2,
+LAG(tweet_count,3) OVER(PARTITION BY user_id ORDER BY tweet_date) as rl3
+FROM tweets)
+
+SELECT user_id, tweet_date,
+CASE 
+  WHEN rl1 IS NULL THEN ROUND(tweet_count/1.0,2)
+  WHEN rl2 IS NULL THEN ROUND((tweet_count+rl1)/2.0,2)
+  ELSE ROUND((tweet_count+rl1+rl2)/3.0,2)
+END rolling_avg_3d
+FROM cte
+/*ex6: Sometimes, payment transactions are repeated by accident; it could be due to user error, API failure or a retry error that causes a credit card to be charged twice.
+Using the transactions table, identify any payments made at the same merchant with the same credit card for the same amount within 10 minutes of each other. Count such repeated payments.
+Assumptions:
+The first transaction of such payments should not be counted as a repeated payment. This means, if there are two transactions performed by a merchant with the same credit card and for the same amount within 10 minutes, there will only be 1 repeated payment.*/\
+WITH cte AS(
+SELECT merchant_id, EXTRACT(MINUTE FROM transaction_timestamp - LAG(transaction_timestamp) 
+OVER(PARTITION BY merchant_id, credit_card_id, amount ORDER BY transaction_timestamp)) AS diff_min 
+FROM transactions)
+
+SELECT COUNT(merchant_id) as payment_count
+FROM cte
+WHERE diff_min < 10
